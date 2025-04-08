@@ -14,14 +14,20 @@
 #include <fcntl.h>
 #include <sys/select.h>
 #include <ctype.h>
-#include "parser.h"
-#include "eventhandlers.h"
+#include "../headers/parser.h"
 
 
+
+/*
+ * Main method, we need one server argument to run this method
+ * 1. Port
+ */
 int main(int argc, char *argv[]) {
-    struct server_arguments args;
-    args = server_parseopt(argc, argv);
-    printf("Port Number: %d\n", args.port);
+    // parse server arguments and find the port.
+    int port = -1;
+    parse_server(argc, argv, &port);
+    assert(port != 1);
+    printf("Port Number: %d\n", port);
     srand(time(NULL));
     //run_server(args.port);
     return 0;

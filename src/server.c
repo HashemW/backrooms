@@ -14,15 +14,8 @@
 #include <fcntl.h>
 #include <sys/select.h>
 #include <ctype.h>
-#include "../headers/parser.h"
-
-
-// kill program function
-void die(char* message) {
-    fprintf(stderr, "%s: %s\n", message, strerror(errno));
-    kill(0, SIGTERM);
-    exit(errno);
-}
+#include "../headers/tools.h"
+#include "../headers/server_processing.h"
 
 /*
  * Here we set up our file descriptors
@@ -57,8 +50,9 @@ int set_up_fd(int socket) {
                             &client_address_size);
                     printf("New connection from %s on socket %d\n",
                             inet_ntoa(client_address.sin_addr), client_socket);
+                    
                     // add code to handle new connection
-                    // handle_new_connection(client_socket);
+                    handle_new_connection(client_socket);
                 } else {
                     // add code to handle existing connection
                     // handle_existing_connection(client_socket)
@@ -116,7 +110,7 @@ int main(int argc, char *argv[]) {
     // parse server arguments and find the port.
     int port = -1;
     parse_server(argc, argv, &port);
-    assert(port != 1);
+    assert(port != -1);
     printf("Port Number: %d\n", port);
     srand(time(NULL));
     run_server(port);

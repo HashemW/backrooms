@@ -1,6 +1,8 @@
 #include <stdio.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <errno.h>
 #include <string.h>
 #include <assert.h>
 #define MAX_STRING_LENGTH 512
@@ -36,7 +38,7 @@ void parse_server(int argc, char *argv[], int *port) {
 void parse_client_args(int argc, char *argv[], char **ip_address, int *port) {
     int opt;
     int loop_count = 0;
-    assert((*port) == 1);
+    assert((*port) == -1);
     assert(*ip_address == NULL);
     while ((opt = getopt(argc, argv, "a:p:")) != -1) {
         loop_count++;
@@ -62,3 +64,10 @@ void parse_client_args(int argc, char *argv[], char **ip_address, int *port) {
         exit(EXIT_FAILURE);
     }
 }
+
+void die(char* message) {
+    fprintf(stderr, "%s: %s\n", message, strerror(errno));
+    kill(0, SIGTERM);
+    exit(errno);
+}
+

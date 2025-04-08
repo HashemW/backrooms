@@ -15,8 +15,29 @@
 #include <sys/select.h>
 #include <ctype.h>
 #include "../headers/tools.h"
+#include "../headers/client_processing.h"
+#define MAX_INPUT 1024
 
+void client_loop(int sock) {
+    char input[MAX_INPUT];
 
+    printf("Command loop started. Type 'quit' to exit.\n");
+
+    while (1) {
+        printf("> ");
+        fflush(stdout); // Make sure the prompt prints immediately
+
+        if (fgets(input, sizeof(input), stdin) != NULL) {
+            // Remove newline
+            input[strcspn(input, "\n")] = 0;
+            tokenize_and_parse(input, sock);
+        } else {
+            // Handle EOF (Ctrl+D) or error
+            printf("Input error or EOF\n");
+            break;
+        }
+    }
+}
 /*
  * Run client method with two parameters
  * 1. IP address of server
@@ -47,6 +68,12 @@ void run_client(char *ip_address, int port) {
                 sizeof(server_address)) < 0) {
         die("CONNECT() ERROR");
     }
+    char buffer[MAX_INPUT];
+    if (recv(client_socket, buffer, MAX_INPUT, 0) < 0) {
+        die("RECV() ERROR");
+    }
+    printf("%s\n", buffer);
+    client_loop(client_socket); 
 }
 /*
  * Client main method, need two command line arguments

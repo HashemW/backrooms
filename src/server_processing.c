@@ -28,7 +28,7 @@
  * connection. Otherwise, good things happen!
  */
 int handle_new_connection(int sock) {
-    char welcomeMessage[] = "Welcome to the your secure chatting service";
+    char welcomeMessage[] = "Welcome to your secure chatting service";
     int err = send(sock, welcomeMessage, strlen(welcomeMessage), 0);
     if (err < 0) {
         die("RECV() ERROR");

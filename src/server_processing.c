@@ -15,8 +15,14 @@
 #include <sys/select.h>
 #include <ctype.h>
 #include "../headers/tools.h"
+#include "../hashmap/hashmap.h"
 #define MAX_STRING_LENGTH 512
+#define MAX_USERS 128
 
+struct user {
+    char *name;
+    int sock;
+};
 
 /*
  * Code handles new connections connecting to the server. 

@@ -15,29 +15,47 @@
 #include <sys/select.h>
 #include <ctype.h>
 #include "../headers/tools.h"
-#include "../hashmap/hashmap.h"
-#define MAX_STRING_LENGTH 512
-#define MAX_USERS 128
-
-struct user {
-    char *name;
-    int sock;
-};
+#include "../headers/server_processing.h"
+#define MAX_STRING_LENGTH 1024
 
 /*
  * Code handles new connections connecting to the server. 
  *
  * Only parameter is the client socket.
  *
- * If something goes wrong or an error of sorts happens, or the user does 
- * something stupid, it will return -1, telling the server to shut this 
- * connection. Otherwise, good things happen!
  */
-int handle_new_connection(int sock) {
-    char welcomeMessage[] = "Welcome to your secure chatting service";
+void handle_new_connection(int sock) {
+    char welcomeMessage[] = "Welcome to your secure chatting service\n"
+                            "Please enter your name using /name <name>";
     int err = send(sock, welcomeMessage, strlen(welcomeMessage), 0);
     if (err < 0) {
         die("RECV() ERROR");
     }
-    return 0;
+}
+
+/*
+ * To handle an existing connection, we need to figure out what is being sent
+ * then we handle it.
+ * Only parameter we need is the client socket.
+ * Return -1 if the user closes the connection
+ */
+
+int handle_existing_connection(int sock) {
+
+} 
+
+/*
+ * We need to handle the case when the user joins and he needs to name 
+ * himself.
+ * only paramater we need is the client socket
+ * Returns -1 if the user closes the connection
+ */
+
+int handle_no_name(int sock) {
+    char welcomeMessage[] = "Please Enter \n"
+                            "Please enter your name using /name <name>";
+    int err = send(sock, welcomeMessage, strlen(welcomeMessage), 0);
+    if (err < 0) {
+        die("RECV() ERROR");
+    }
 }

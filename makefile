@@ -2,6 +2,7 @@ CC = gcc
 CFLAGS = -Wall -g -Iheaders
 SRC_DIR = src
 OBJ_DIR = build
+HASH_DIR = hashmap
 BIN = server client
 
 SERVERSOURCES = $(SRC_DIR)/server.c $(SRC_DIR)/tools.c $(SRC_DIR)/server_processing.c

@@ -15,7 +15,7 @@
 #include <sys/select.h>
 #include <ctype.h>
 #include "../headers/tools.h"
-
+#include "../headers/client_processing.h"
 #define MAX_INPUT 1024
 #define MAX_TOKENS 16
 
@@ -77,6 +77,4 @@ void tokenize_and_parse(char *input, int sock) {
     } else {
         input_error("Enter a command using /<command>");
     }
-
-    printf("%d\n", command);
 }

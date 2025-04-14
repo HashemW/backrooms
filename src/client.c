@@ -18,10 +18,6 @@
 #include "../headers/client_processing.h"
 #define MAX_INPUT 1024
 
-typedef struct message {
-    CommandType command;
-
-} msg;
 void client_loop(int sock) {
     char input[MAX_INPUT];
     int name_set = 0;
@@ -33,8 +29,15 @@ void client_loop(int sock) {
         if (fgets(input, sizeof(input), stdin) != NULL) {
             // Remove newline
             input[strcspn(input, "\n")] = 0;
-            command = tokenize_and_parse(input, sock, &name_set);
-            printf("Name set: %d\n", name_set); 
+            msg newMsg;
+            // if there are arguments newMsg.input is passed in to take it
+            command = tokenize_and_parse(input, sock, &name_set, newMsg.arg1, 
+                    newMsg.arg2);
+            printf("Command: %d\n", command);
+            printf("Argument 1: %s\n", newMsg.arg1);
+            printf("Argument 2: %s\n", newMsg.arg2);
+            newMsg.command = htons(command);
+        
         } else {
             // Handle EOF (Ctrl+D) or error
             printf("Input error or EOF\n");

@@ -29,7 +29,7 @@ void handle_new_connection(int sock) {
                             "Please enter your name using /name <name>";
     int err = send(sock, welcomeMessage, strlen(welcomeMessage), 0);
     if (err < 0) {
-        die("RECV() ERROR");
+        die("SEND() ERROR");
     }
 }
 
@@ -41,7 +41,14 @@ void handle_new_connection(int sock) {
  */
 
 int handle_existing_connection(int sock) {
-
+    char recevition[MAX_STRING_LENGTH] = {0};
+    int status = recv(sock, recevition, MAX_STRING_LENGTH, 0);
+    if (status == 0) {
+        return -1;
+    } else if (status < 0) {
+        die("RECV() ERROR");
+    }
+    return 0;
 } 
 
 /*
@@ -58,4 +65,5 @@ int handle_no_name(int sock) {
     if (err < 0) {
         die("RECV() ERROR");
     }
+    return 0;
 }

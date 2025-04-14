@@ -19,11 +19,11 @@
 #define MAX_NAME_LENGTH 32
 #define MAX_USERS 128
 
-struct user {
+typedef struct userStruct {
     char name[MAX_NAME_LENGTH];
-    int sock;
     char curr_room[MAX_NAME_LENGTH];
-};
+    int sock;
+} user;
 /*
  * Here we set up our file descriptors
  */
@@ -39,7 +39,7 @@ int set_up_fd(int socket) {
     // to know which number to give a user when he joins
     // make our hashmap of users
     // this is for setting the name and adding it to the hashmap.
-    struct user users[MAX_USERS]i = {0};
+    user users[MAX_USERS] = {0};
     // exception to infinite loop rule, its meant to run forever
     while(1) {
         // read the bluds
@@ -70,7 +70,7 @@ int set_up_fd(int socket) {
                     for (int i = 0; i < MAX_USERS; i++) {
                         if (users[i].name == 0) {
                             // # means the name is unset
-                            users[i].name = "#";
+                            strcpy(users[i].name, "#");
                             users[i].sock = client_socket;
                             break;
                         }
@@ -79,9 +79,9 @@ int set_up_fd(int socket) {
                     // check if the user set their name, I know this is not
                     // efficient, but this isnt the focus of the project.
                     for (int i = 0; i < MAX_USERS; i++) {
-                        if (users[i].socket == fd) {
+                        if (users[i].sock == fd) {
                             int status = 0;
-                            if (strcmp(users[i], "#") == 0) {
+                            if (strcmp(users[i].name, "#") == 0) {
                                 status = handle_no_name(fd);
                             } else {
                                 status = handle_existing_connection(fd);
@@ -90,10 +90,6 @@ int set_up_fd(int socket) {
                         }
 
                     }
-                    // add code to handle existing connection
-                    // handle_existing_connection(client_socket)
-                    // since this is a bit more complicated, we'll have to
-                    // also check the return values
                 }
             }
         }

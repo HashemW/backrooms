@@ -19,6 +19,20 @@
 #include <ctype.h>
 #include "../headers/tools.h"
 
-void tokenize_and_parse(char *input, int sock);
+
+typedef enum {
+    CMD_UNKNOWN,
+    CMD_LIST_PEOPLE,
+    CMD_LIST_CHATS,
+    CMD_JOIN,
+    CMD_CREATE,
+    CMD_LEAVE,
+    CMD_MSG,
+    CMD_DISCONNECT,
+    CMD_SET_NAME
+} CommandType;
+
+
+int tokenize_and_parse(char *input, int sock, int *name_set);
 
 #endif

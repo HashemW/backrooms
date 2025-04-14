@@ -18,11 +18,14 @@
 #include "../headers/client_processing.h"
 #define MAX_INPUT 1024
 
+typedef struct message {
+    CommandType command;
+
+} msg;
 void client_loop(int sock) {
     char input[MAX_INPUT];
-
-    printf("Command loop started. Type 'quit' to exit.\n");
-
+    int name_set = 0;
+    CommandType command;
     while (1) {
         printf("> ");
         fflush(stdout); // Make sure the prompt prints immediately
@@ -30,7 +33,8 @@ void client_loop(int sock) {
         if (fgets(input, sizeof(input), stdin) != NULL) {
             // Remove newline
             input[strcspn(input, "\n")] = 0;
-            tokenize_and_parse(input, sock);
+            command = tokenize_and_parse(input, sock, &name_set);
+            printf("Name set: %d\n", name_set); 
         } else {
             // Handle EOF (Ctrl+D) or error
             printf("Input error or EOF\n");

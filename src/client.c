@@ -37,7 +37,12 @@ void client_loop(int sock) {
             printf("Argument 1: %s\n", newMsg.arg1);
             printf("Argument 2: %s\n", newMsg.arg2);
             newMsg.command = htons(command);
-        
+            if (send(sock, &newMsg, sizeof(newMsg), 0) < 0) {
+                die("SEND ERROR");
+            }
+            memset(newMsg.arg1, 0, sizeof(newMsg.arg1));
+            memset(newMsg.arg2, 0, sizeof(newMsg.arg2));
+            memset(input, 0, sizeof(input));
         } else {
             // Handle EOF (Ctrl+D) or error
             printf("Input error or EOF\n");

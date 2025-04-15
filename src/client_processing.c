@@ -68,7 +68,7 @@ int deal_with_rooms(char *token, char *arg1, char *arg2) {
 char *get_arguments(char *msg) {
     char *space_ptr = strchr(msg, ' ');
     char *substring;
-    printf("SUBSTRING: %s\n", msg);
+    //printf("SUBSTRING: %s\n", msg);
     if (space_ptr != NULL) {
         substring = space_ptr + 1;
     } else {
@@ -89,15 +89,14 @@ int deal_with_msg(char *token, char *input, char *arg1, char *arg2) {
     }
     strcpy(arg1, token);
     //message
-    char *substring = get_arguments(input);
-    if (substring == NULL) {
-        return -1;
-    }
-    substring = get_arguments(substring);
-    if (get_arguments(substring) == NULL) {
+    //check if there are two arguments
+    token = strtok(NULL, " ");
+    if (token == NULL) {
         input_error("This command requires two arguments!");
         return -1;
     }
+    char *substring = get_arguments(input);
+    substring = get_arguments(substring);
     strcpy(arg2, substring);
     return 0;
 }
@@ -129,6 +128,7 @@ int tokenize_and_parse(char *input, int sock, int *name_set, char *arg1,
     // Identify command
     if (strcmp(token, "/name") == 0) {
         command = CMD_SET_NAME;
+        deal_with_rooms(token, arg1, arg2);
     } else if (strcmp(token, "/disconnect") == 0
             || strcmp(token, "/quit") == 0) { 
         command = CMD_DISCONNECT;
@@ -163,5 +163,6 @@ int tokenize_and_parse(char *input, int sock, int *name_set, char *arg1,
         }
     }
     *name_set = 1;
+    memset(inputCopy, 0, sizeof(inputCopy));
     return command;
 }

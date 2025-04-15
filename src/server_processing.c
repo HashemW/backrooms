@@ -16,7 +16,6 @@
 #include <ctype.h>
 #include "../headers/tools.h"
 #include "../headers/server_processing.h"
-#define MAX_STRING_LENGTH 1024
 
 /*
  * Code handles new connections connecting to the server. 
@@ -41,8 +40,8 @@ void handle_new_connection(int sock) {
  */
 
 int handle_existing_connection(int sock) {
-    char recevition[MAX_STRING_LENGTH] = {0};
-    int status = recv(sock, recevition, MAX_STRING_LENGTH, 0);
+    char recevition[MAX_INPUT] = {0};
+    int status = recv(sock, recevition, MAX_INPUT, 0);
     if (status == 0) {
         return -1;
     } else if (status < 0) {
@@ -58,12 +57,14 @@ int handle_existing_connection(int sock) {
  * Returns -1 if the user closes the connection
  */
 
-int handle_no_name(int sock) {
-    char welcomeMessage[] = "Please Enter \n"
-                            "Please enter your name using /name <name>";
-    int err = send(sock, welcomeMessage, strlen(welcomeMessage), 0);
-    if (err < 0) {
+int handle_no_name(int sock, user *usr) {
+    char recevition[MAX_INPUT] = {0};
+    int status = recv(sock, recevition, MAX_INPUT, 0);
+    if (status == 0) {
+        return -1;
+    } else if (status < 0) {
         die("RECV() ERROR");
     }
+    
     return 0;
 }

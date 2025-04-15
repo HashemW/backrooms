@@ -22,6 +22,6 @@ void handle_new_connection(int sock);
 
 int handle_existing_connection(int sock);
 
-int handle_no_name(int sock);
+int handle_no_name(int sock, user *usr);
 
 #endif

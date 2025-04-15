@@ -8,6 +8,7 @@
 #include <string.h>
 #include <assert.h>
 #define MAX_INPUT 1024
+
 typedef enum {
     CMD_UNKNOWN,
     CMD_LIST_PEOPLE,
@@ -19,6 +20,13 @@ typedef enum {
     CMD_DISCONNECT,
     CMD_SET_NAME
 } CommandType;
+
+typedef struct userStruct {
+    char name[MAX_INPUT];
+    int in_room;
+    char curr_room[MAX_INPUT];
+    int sock;
+} user;
 
 typedef struct message {
     CommandType command;

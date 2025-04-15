@@ -19,11 +19,6 @@
 #define MAX_NAME_LENGTH 32
 #define MAX_USERS 128
 
-typedef struct userStruct {
-    char name[MAX_NAME_LENGTH];
-    char curr_room[MAX_NAME_LENGTH];
-    int sock;
-} user;
 /*
  * Here we set up our file descriptors
  */
@@ -60,15 +55,19 @@ int set_up_fd(int socket) {
                             (struct sockaddr *) &client_address, 
                             &client_address_size);
                     if (client_socket < 0) {
-                        perror("ACCEPT() ERROR");
+                        die("ACCEPT() ERROR");
                         continue;
+                    } else {
+                        FD_SET(client_socket, &master_fds);
                     }
-
+                    if (client_socket > max_fd) {
+                        max_fd = client_socket;
+                    }
                     // add code to handle new connection
                     handle_new_connection(client_socket);
                     // add the new user to the users
                     for (int i = 0; i < MAX_USERS; i++) {
-                        if (users[i].name == 0) {
+                        if (users[i].sock == 0) {
                             // # means the name is unset
                             strcpy(users[i].name, "#");
                             users[i].sock = client_socket;
@@ -80,15 +79,13 @@ int set_up_fd(int socket) {
                     // efficient, but this isnt the focus of the project.
                     for (int i = 0; i < MAX_USERS; i++) {
                         if (users[i].sock == fd) {
-                            int status = 0;
                             if (strcmp(users[i].name, "#") == 0) {
-                                status = handle_no_name(fd);
+                                handle_no_name(fd, &users[i]);
                             } else {
-                                status = handle_existing_connection(fd);
+                                handle_existing_connection(fd);
                             }
                             break;
                         }
-
                     }
                 }
             }

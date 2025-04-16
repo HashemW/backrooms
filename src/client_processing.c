@@ -19,15 +19,11 @@
 #define MAX_INPUT 1024
 #define MAX_TOKENS 16
 
-void input_error(char *msg) {
-    printf("Invalid Input: %s\n", msg);
-}
-
 /*
  * Just to make the code cleaner made this function to parse between which
  * list the user wants
  */
-int deal_with_list(char *token) {
+int deal_with_list(char *token, char *err_msg) {
     CommandType command;
     token = strtok(NULL, " ");
     if (strcmp(token, "people") == 0 && token != NULL) {
@@ -35,7 +31,7 @@ int deal_with_list(char *token) {
     } else if (strcmp(token, "chats") == 0 && token != NULL) {
         command = CMD_LIST_CHATS;
     } else {
-        input_error("Use /list <command>");
+        strcpy(err_msg, "Use /list <command>");
         return -1;
     }
     return command;
@@ -47,11 +43,11 @@ int deal_with_list(char *token) {
  * arguments)
  * the two parameters are strings for the arguments
  */
-int deal_with_rooms(char *token, char *arg1, char *arg2) {
+int deal_with_rooms(char *token, char *arg1, char *arg2, char *err_msg) {
     //name
     token = strtok(NULL, " ");
     if (token == NULL) {
-        input_error("This command requires an argument!");
+        strcpy(err_msg, "This command requires an argument!");
         return -1;
     }
     strcpy(arg1, token);
@@ -80,11 +76,12 @@ char *get_arguments(char *msg) {
 /*
  * Deal with message stuff and arguments
  */
-int deal_with_msg(char *token, char *input, char *arg1, char *arg2) {
+int deal_with_msg(char *token, char *input, char *arg1, char *arg2, 
+    char *err_msg) {
     // name
     token = strtok(NULL, " ");
     if (token == NULL) {
-        input_error("This command requires two arguments!");
+        strcpy(err_msg, "This command requires two arguments!");
         return -1;
     }
     strcpy(arg1, token);
@@ -92,7 +89,7 @@ int deal_with_msg(char *token, char *input, char *arg1, char *arg2) {
     //check if there are two arguments
     token = strtok(NULL, " ");
     if (token == NULL) {
-        input_error("This command requires two arguments!");
+        strcpy(err_msg, "This command requires two arguments!");
         return -1;
     }
     char *substring = get_arguments(input);
@@ -109,11 +106,11 @@ int deal_with_msg(char *token, char *input, char *arg1, char *arg2) {
 // set or not. Returns 1 if the name gets set, returns 0 if the name is not
 // set.
 int tokenize_and_parse(char *input, int sock, int *name_set, char *arg1, 
-        char *arg2) {
+        char *arg2, char *err_msg) {
     CommandType command;
     // check if input length is acceptable
     if (strlen(input) > 950) {
-        input_error("Input too long");
+        strcpy(err_msg, "Input too long");
         return -1;
     }
     char inputCopy[MAX_INPUT];
@@ -122,24 +119,24 @@ int tokenize_and_parse(char *input, int sock, int *name_set, char *arg1,
     // Tokenize input (space-separated)
     char *token = strtok(input, " ");
     if (token == NULL) {
-        input_error("Enter a command using /<command>");
+        strcpy(err_msg, "Enter a command using /<command>");
         return -1;
     } 
     // Identify command
     if (strcmp(token, "/name") == 0) {
         command = CMD_SET_NAME;
-        deal_with_rooms(token, arg1, arg2);
+        deal_with_rooms(token, arg1, arg2, err_msg);
     } else if (strcmp(token, "/disconnect") == 0
             || strcmp(token, "/quit") == 0) { 
         command = CMD_DISCONNECT;
     // if the user tries to do anything else without their name set, do not 
     // let them!
     } else if (!(*name_set)) {
-        input_error("Please Enter your name using /name <name>");
+        strcpy(err_msg, "Please Enter your name using /name <name>");
         *name_set = 0;
-        return -2;
+        return -1;
     } else if (strcmp(token, "/list") == 0) {
-        command = deal_with_list(token);
+        command = deal_with_list(token, err_msg);
     } else if (strcmp(token, "/leave") == 0) {
         command = CMD_LEAVE;
     // deal with multi argument requests
@@ -147,15 +144,15 @@ int tokenize_and_parse(char *input, int sock, int *name_set, char *arg1,
         int dealing;
         if (strcmp(token, "/join") == 0) {
             command = CMD_JOIN;
-            dealing = deal_with_rooms(token, arg1, arg2);
+            dealing = deal_with_rooms(token, arg1, arg2, err_msg);
         } else if (strcmp(token, "/create") == 0) {
             command = CMD_CREATE;
-            dealing = deal_with_rooms(token, arg1, arg2);
+            dealing = deal_with_rooms(token, arg1, arg2, err_msg);
         } else if (strcmp(token, "/msg") == 0) {
             command = CMD_MSG;
-            dealing = deal_with_msg(token, inputCopy, arg1, arg2);
+            dealing = deal_with_msg(token, inputCopy, arg1, arg2, err_msg);
         } else {
-            input_error("Enter a command using /<command>");
+            strcpy(err_msg, "Enter a command using /<command>");
             return -1;
         }
         if (dealing == -1) {

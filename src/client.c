@@ -36,7 +36,7 @@ void client_loop(int sock) {
             }
             // Check if the command is valid
             if (m.command == CMD_UNKNOWN) {
-                printf("Command not recognized\n");
+                printf("Invalid Input: %s\n", m.arg1);
             } else if (m.command == CMD_LIST_PEOPLE) {
                 printf("List of people in the chat: %s\n", m.arg1);
             } else if (m.command == CMD_LIST_CHATS) {

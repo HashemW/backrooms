@@ -21,6 +21,6 @@
 
 
 int tokenize_and_parse(char *input, int sock, int *name_set, char *arg1, 
-        char *arg2);
+        char *arg2, char *err_msg);
 
 #endif

@@ -79,7 +79,7 @@ int set_up_fd(int socket) {
                             } else if (status < 0) {
                                 die("RECV() ERROR");
                             }
-                            handle_connection(fd, &users[i], recevition);
+                            handle_connection(fd, users, &users[i], recevition);
                             memset(recevition, 0, strlen(recevition));
                             // if (strcmp(users[i].name, "#") == 0) {
                             //     handle_no_name(fd, &users[i]);

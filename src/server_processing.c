@@ -46,10 +46,11 @@ void handle_new_connection(int sock, user *users) {
 * The message is sent using the send() function.
 * If the send() function fails, it calls the die() function to handle the error.
 */
-void send_failure(int sock) {
+void send_failure(int sock, char *message) {
     // send the failure message
     network_msg failure;
     failure.command = CMD_UNKNOWN;
+    strcpy(failure.arg1, message);
     int err = send(sock, &failure, sizeof(failure), 0);
     if (err < 0) {
         die("SEND() ERROR");
@@ -89,23 +90,32 @@ int handle_existing_connection(int sock, user *usr) {
     return 0;
 } 
 
-void handle_connection(int sock, user *usr, char* input) {
+void handle_connection(int sock, user *users, user *usr, char* input) {
     // check if the user has a name set
+
     msg newMsg;
+    char err_msg[MAX_INPUT];
     // if there are arguments newMsg.input is passed in to take it
     CommandType command = tokenize_and_parse(input, sock, &(usr->name_set), 
-        newMsg.arg1, newMsg.arg2);
+        newMsg.arg1, newMsg.arg2, err_msg);
     printf("Command: %d\n", command);
     printf("Argument 1: %s\n", newMsg.arg1);
     printf("Argument 2: %s\n", newMsg.arg2);
     if (command == -1) {
-        send_failure(sock);
+        send_failure(sock, err_msg);
     } else if (command == CMD_SET_NAME) {
         strcpy(usr->name, newMsg.arg1);
         usr->name_set = 1;
         send_confirmation(sock, command, newMsg.arg1);
     } else if (command == CMD_LIST_PEOPLE) {
-        send_confirmation(sock, command, "List of people");
+        char peopleList[MAX_INPUT];
+        for (int i = 0; i < MAX_USERS; i++) {
+            if (users[i].sock != 0) {
+                strcat(peopleList, users[i].name);
+                strcat(peopleList, "\n");
+            }
+        }
+        send_confirmation(sock, command, peopleList);
     } else if (command == CMD_LIST_CHATS) {
         send_confirmation(sock, command, "List of chats");
     } else if (command == CMD_JOIN) {
@@ -118,9 +128,12 @@ void handle_connection(int sock, user *usr, char* input) {
         send_confirmation(sock, command, "Message sent");
     } else if (command == CMD_DISCONNECT) {
         send_confirmation(sock, command, "Disconnected");
+    } else {
+        send_failure(sock, "Unknown command");
     }
     memset(newMsg.arg1, 0, sizeof(newMsg.arg1));
     memset(newMsg.arg2, 0, sizeof(newMsg.arg2));
+    memset(err_msg, 0, sizeof(err_msg));
 }
 /*
  * We need to handle the case when the user joins and he needs to name 

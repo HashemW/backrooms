@@ -24,6 +24,6 @@ int handle_existing_connection(int sock, user *usr);
 
 int handle_no_name(int sock, user *usr);
 
-void handle_connection(int sock, user *usr, char* input);
+void handle_connection(int sock, user *users, user *usr, char* input);
 
 #endif

@@ -5,7 +5,7 @@ OBJ_DIR = build
 HASH_DIR = hashmap
 BIN = server client
 
-SERVERSOURCES = $(SRC_DIR)/server.c $(SRC_DIR)/tools.c $(SRC_DIR)/server_processing.c
+SERVERSOURCES = $(SRC_DIR)/server.c $(SRC_DIR)/tools.c $(SRC_DIR)/server_processing.c $(SRC_DIR)/client_processing.c
 CLIENTSOURCES = $(SRC_DIR)/client.c $(SRC_DIR)/tools.c $(SRC_DIR)/client_processing.c
 OBJECTS = $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SOURCES))
 

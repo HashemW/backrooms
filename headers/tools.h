@@ -22,13 +22,19 @@ typedef enum {
 } CommandType;
 
 typedef struct userStruct {
-    char name[MAX_INPUT];
-    int in_room;
-    char curr_room[MAX_INPUT];
+    int name_set;
     int sock;
+    int in_room;
+    char name[MAX_INPUT];
+    char curr_room[MAX_INPUT];
 } user;
 
-typedef struct message {
+typedef struct network_msg {
+    CommandType command;
+    char arg1[MAX_INPUT];
+} network_msg;
+
+typedef struct msg {
     CommandType command;
     char arg1[MAX_INPUT];
     char arg2[MAX_INPUT];

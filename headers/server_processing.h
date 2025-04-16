@@ -16,12 +16,14 @@
 #include <fcntl.h>
 #include <sys/select.h>
 #include <ctype.h>
+#define MAX_USERS 128
 
+void handle_new_connection(int sock, user *usr);
 
-void handle_new_connection(int sock);
-
-int handle_existing_connection(int sock);
+int handle_existing_connection(int sock, user *usr);
 
 int handle_no_name(int sock, user *usr);
+
+void handle_connection(int sock, user *usr, char* input);
 
 #endif

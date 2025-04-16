@@ -16,8 +16,8 @@
 #include <ctype.h>
 #include "../headers/tools.h"
 #include "../headers/server_processing.h"
+#include "../headers/client_processing.h"
 #define MAX_NAME_LENGTH 32
-#define MAX_USERS 128
 
 /*
  * Here we set up our file descriptors
@@ -64,26 +64,28 @@ int set_up_fd(int socket) {
                         max_fd = client_socket;
                     }
                     // add code to handle new connection
-                    handle_new_connection(client_socket);
-                    // add the new user to the users
-                    for (int i = 0; i < MAX_USERS; i++) {
-                        if (users[i].sock == 0) {
-                            // # means the name is unset
-                            strcpy(users[i].name, "#");
-                            users[i].sock = client_socket;
-                            break;
-                        }
-                    }
+                    handle_new_connection(client_socket, users);
                 } else {
                     // check if the user set their name, I know this is not
                     // efficient, but this isnt the focus of the project.
+                    
                     for (int i = 0; i < MAX_USERS; i++) {
                         if (users[i].sock == fd) {
-                            if (strcmp(users[i].name, "#") == 0) {
-                                handle_no_name(fd, &users[i]);
-                            } else {
-                                handle_existing_connection(fd);
+                            char recevition[MAX_INPUT];
+                            int status = recv(users[i].sock, &recevition, 
+                                sizeof(recevition), 0);
+                            if (status == 0) {
+                                return -1;
+                            } else if (status < 0) {
+                                die("RECV() ERROR");
                             }
+                            handle_connection(fd, &users[i], recevition);
+                            memset(recevition, 0, strlen(recevition));
+                            // if (strcmp(users[i].name, "#") == 0) {
+                            //     handle_no_name(fd, &users[i]);
+                            // } else {
+                            //     handle_existing_connection(fd, &users[i]);
+                            // }
                             break;
                         }
                     }

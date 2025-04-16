@@ -20,8 +20,6 @@
 
 void client_loop(int sock) {
     char input[MAX_INPUT];
-    int name_set = 0;
-    CommandType command;
     while (1) {
         printf("> ");
         fflush(stdout); // Make sure the prompt prints immediately
@@ -29,19 +27,34 @@ void client_loop(int sock) {
         if (fgets(input, sizeof(input), stdin) != NULL) {
             // Remove newline
             input[strcspn(input, "\n")] = 0;
-            msg newMsg;
-            // if there are arguments newMsg.input is passed in to take it
-            command = tokenize_and_parse(input, sock, &name_set, newMsg.arg1, 
-                    newMsg.arg2);
-            printf("Command: %d\n", command);
-            printf("Argument 1: %s\n", newMsg.arg1);
-            printf("Argument 2: %s\n", newMsg.arg2);
-            newMsg.command = htons(command);
-            if (send(sock, &newMsg, sizeof(newMsg), 0) < 0) {
+            if (send(sock, &input, sizeof(input), 0) < 0) {
                 die("SEND ERROR");
             }
-            memset(newMsg.arg1, 0, sizeof(newMsg.arg1));
-            memset(newMsg.arg2, 0, sizeof(newMsg.arg2));
+            network_msg m;
+            if (recv(sock, &m, sizeof(m), 0) < 0) {
+                die("RECV() ERROR");
+            }
+            // Check if the command is valid
+            if (m.command == CMD_UNKNOWN) {
+                printf("Command not recognized\n");
+            } else if (m.command == CMD_LIST_PEOPLE) {
+                printf("List of people in the chat: %s\n", m.arg1);
+            } else if (m.command == CMD_LIST_CHATS) {
+                printf("List of chats: %s\n", m.arg1);
+            } else if (m.command == CMD_JOIN) {
+                printf("Joined chat: %s\n", m.arg1);
+            } else if (m.command == CMD_CREATE) {
+                printf("Created chat: %s\n", m.arg1);
+            } else if (m.command == CMD_LEAVE) {
+                printf("Left chat: %s\n", m.arg1);
+            } else if (m.command == CMD_MSG) {
+                printf("Message from\n");
+            } else if (m.command == CMD_DISCONNECT) {
+                printf("Disconnected from server\n");
+                break;
+            } else if (m.command == CMD_SET_NAME) {
+                printf("Name set to: %s\n", m.arg1);
+            }
             memset(input, 0, sizeof(input));
         } else {
             // Handle EOF (Ctrl+D) or error

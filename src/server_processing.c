@@ -90,7 +90,8 @@ int handle_existing_connection(int sock, user *usr) {
     return 0;
 } 
 
-void handle_connection(int sock, user *users, user *usr, char* input) {
+void handle_connection(int sock, user *users, chat_room *rooms, user *usr, 
+    char* input) {
     // check if the user has a name set
 
     msg newMsg;
@@ -108,22 +109,103 @@ void handle_connection(int sock, user *users, user *usr, char* input) {
         usr->name_set = 1;
         send_confirmation(sock, command, newMsg.arg1);
     } else if (command == CMD_LIST_PEOPLE) {
+        // two options, if someone is in a chatroom, or not
         char peopleList[MAX_INPUT];
-        for (int i = 0; i < MAX_USERS; i++) {
-            if (users[i].sock != 0) {
-                strcat(peopleList, users[i].name);
-                strcat(peopleList, "\n");
+        if (usr->in_room == 0) {
+            for (int i = 0; i < MAX_USERS; i++) {
+                if (users[i].sock != 0) {
+                    strcat(peopleList, users[i].name);
+                    strcat(peopleList, "\n");
+                }
+            }
+        } else {
+            // this code will need to be debugged.
+            for (int i = 0; i < MAX_ROOMS; i++) {
+                if (strcmp(usr->curr_room, rooms[i].name) == 0) {
+                    for (int j = 0; j < MAX_USERS; j++) {
+                        if (rooms[i].users[j]->sock != 0) {
+                            strcat(peopleList, rooms[i].users[j]->name);
+                            strcat(peopleList, "\n");
+                        }
+                    }
+                }
             }
         }
         send_confirmation(sock, command, peopleList);
     } else if (command == CMD_LIST_CHATS) {
-        send_confirmation(sock, command, "List of chats");
+        char chatList[MAX_INPUT];
+        for (int i = 0; i < MAX_ROOMS; i++) {
+            if (rooms[i].in_use) {
+                strcat(chatList, rooms[i].name);
+                strcat(chatList, "\n");
+            }
+        }
+        send_confirmation(sock, command, chatList);
     } else if (command == CMD_JOIN) {
-        send_confirmation(sock, command, "Join chat");
-    } else if (command == CMD_CREATE) {
-        send_confirmation(sock, command, "Create chat");
+        // join chat process is easy, check if chat exists, if it doesnt
+        // create it, else join it
+        // first, if the user is in a room, we need to purge that.
+        for (int i = 0; i < MAX_ROOMS; i++) {
+            if (strcmp(usr->curr_room, rooms[i].name) == 0) {
+                // remove the user from the room
+                for (int j = 0; j < MAX_USERS; j++) {
+                    if (rooms[i].users[j]->sock == usr->sock) {
+                        free(rooms[i].users[j]);
+                        rooms[i].users[j] = calloc(1, sizeof(user));
+                        rooms[i].population--;
+                        //check if the room is empty, if it is delete
+                        if (rooms[i].population == 0) {
+                            rooms[i].in_use = 0;
+                            memset(rooms[i].name, 0, sizeof(rooms[i].name));
+                            memset(rooms[i].password, 0, 
+                                sizeof(rooms[i].password));
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        usr->in_room = 0;
+        for (int i = 0; i < MAX_ROOMS; i++) {
+            if (strcmp(rooms[i].name, newMsg.arg1) == 0) {
+                // add the user to the room
+                if (strcmp(rooms[i].password, newMsg.arg2) == 0) {
+                    for (int j = 0; j < MAX_USERS; j++) {
+                        if (rooms[i].users[j].sock == 0) {
+                            rooms[i].users[j] = *usr;
+                            usr->in_room = 1;
+                            strcpy(usr->curr_room, rooms[i].name);
+                            rooms[i].population++;
+                            break;
+                        }
+                    }
+                } else {
+                    send_failure(sock, "Incorrect password");
+                    memset(newMsg.arg1, 0, sizeof(newMsg.arg1));
+                    memset(newMsg.arg2, 0, sizeof(newMsg.arg2));
+                    memset(err_msg, 0, sizeof(err_msg));
+                    return;
+                }
+            }
+        }
+        if (usr->in_room == 0) {
+            // create the room
+            for (int i = 0; i < MAX_ROOMS; i++) {
+                if (rooms[i].in_use == 0) {
+                    rooms[i].in_use = 1;
+                    strcpy(rooms[i].name, newMsg.arg1);
+                    strcpy(rooms[i].password, newMsg.arg2);
+                    rooms[i].users[0] = *usr;
+                    usr->in_room = 1;
+                    strcpy(usr->curr_room, rooms[i].name);
+                    rooms[i].population++;
+                    break;
+                }
+            }
+        }
+        send_confirmation(sock, command, "Joined Chat!");
     } else if (command == CMD_LEAVE) {
-        send_confirmation(sock, command, "Leave chat");
+        send_confirmation(sock, command, "Left chat!");
     } else if (command == CMD_MSG) {
         send_confirmation(sock, command, "Message sent");
     } else if (command == CMD_DISCONNECT) {

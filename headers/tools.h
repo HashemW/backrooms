@@ -1,5 +1,6 @@
 #ifndef TOOLS
 #define TOOLS
+
 #include <signal.h>
 #include <errno.h>
 #include <stdio.h>
@@ -8,6 +9,8 @@
 #include <string.h>
 #include <assert.h>
 #define MAX_INPUT 1024
+#define MAX_USERS 128
+#define MAX_ROOMS 32
 
 typedef enum {
     CMD_UNKNOWN,
@@ -28,6 +31,14 @@ typedef struct userStruct {
     char name[MAX_INPUT];
     char curr_room[MAX_INPUT];
 } user;
+
+typedef struct room {
+    int in_use;
+    int population;
+    char name[MAX_INPUT];
+    char password[MAX_INPUT];
+    user **users;
+} chat_room;
 
 typedef struct network_msg {
     CommandType command;

@@ -19,23 +19,38 @@
 #include "../headers/client_processing.h"
 #define MAX_NAME_LENGTH 32
 
+
 /*
  * Here we set up our file descriptors
  */
 int set_up_fd(int socket) {
     // check that our socket parameter is sane
+    printf("Server is running...\n");
     assert(socket > 0);
     // set up file descriptors to get multiple clients at once
     fd_set master_fds, read_fds;
     int max_fd = socket;
-
+    
     FD_ZERO(&master_fds);
     FD_SET(socket, &master_fds);
     // to know which number to give a user when he joins
     // make our hashmap of users
     // this is for setting the name and adding it to the hashmap.
-    user users[MAX_USERS] = {0};
+    user *users = calloc(MAX_USERS, sizeof(user));
+    if (users == NULL) {
+        die("CALLOC() ERROR");
+    }
     // exception to infinite loop rule, its meant to run forever
+    chat_room *rooms = calloc(MAX_ROOMS, sizeof(chat_room));
+    if (rooms == NULL) {
+        die("CALLOC() ERROR");
+    }
+    for (int i = 0; i < MAX_ROOMS; i++) {
+        rooms->users[i] = calloc(1, sizeof(user));
+        if (rooms->users[i] == NULL) {
+            die("CALLOC() ERROR");
+        }
+    }
     while(1) {
         // read the bluds
         read_fds = master_fds;
@@ -79,13 +94,9 @@ int set_up_fd(int socket) {
                             } else if (status < 0) {
                                 die("RECV() ERROR");
                             }
-                            handle_connection(fd, users, &users[i], recevition);
+                            handle_connection(fd, users, rooms,
+                                 &users[i], recevition);
                             memset(recevition, 0, strlen(recevition));
-                            // if (strcmp(users[i].name, "#") == 0) {
-                            //     handle_no_name(fd, &users[i]);
-                            // } else {
-                            //     handle_existing_connection(fd, &users[i]);
-                            // }
                             break;
                         }
                     }
@@ -126,9 +137,12 @@ void run_server(int port) {
     if (listen(server_socket, 5) < 0) {
         die("LISTEN() ERROR");
     }
+    
     //for a last time, check our socket is fine
     assert(server_socket > 0);
+    
     // set up file descriptors to get multiple clients at once
+    printf("Server is running...\n");
     set_up_fd(server_socket);
 }
 

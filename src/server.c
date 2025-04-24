@@ -25,7 +25,6 @@
  */
 int set_up_fd(int socket) {
     // check that our socket parameter is sane
-    printf("Server is running...\n");
     assert(socket > 0);
     // set up file descriptors to get multiple clients at once
     fd_set master_fds, read_fds;
@@ -36,6 +35,7 @@ int set_up_fd(int socket) {
     // to know which number to give a user when he joins
     // make our hashmap of users
     // this is for setting the name and adding it to the hashmap.
+    
     user *users = calloc(MAX_USERS, sizeof(user));
     if (users == NULL) {
         die("CALLOC() ERROR");
@@ -45,12 +45,17 @@ int set_up_fd(int socket) {
     if (rooms == NULL) {
         die("CALLOC() ERROR");
     }
+    rooms->users = calloc(MAX_ROOMS, sizeof(user*));
+    if (rooms->users == NULL) {
+        die("CALLOC() ERROR");
+    }
     for (int i = 0; i < MAX_ROOMS; i++) {
-        rooms->users[i] = calloc(1, sizeof(user));
+        rooms->users[i] = calloc(MAX_USERS, sizeof(user));
         if (rooms->users[i] == NULL) {
             die("CALLOC() ERROR");
         }
     }
+    
     while(1) {
         // read the bluds
         read_fds = master_fds;
@@ -90,10 +95,18 @@ int set_up_fd(int socket) {
                             int status = recv(users[i].sock, &recevition, 
                                 sizeof(recevition), 0);
                             if (status == 0) {
-                                return -1;
+                                // user has closed the connection
+                                close(users[i].sock);
+                                FD_CLR(users[i].sock, &master_fds);
+                                users[i].sock = 0;
+                                users[i].name_set = 0;
+                                users[i].in_room = 0;
+                                memset(users[i].name, 0, sizeof(users[i].name));
+                                break;
                             } else if (status < 0) {
                                 die("RECV() ERROR");
                             }
+                            
                             handle_connection(fd, users, rooms,
                                  &users[i], recevition);
                             memset(recevition, 0, strlen(recevition));
@@ -142,7 +155,6 @@ void run_server(int port) {
     assert(server_socket > 0);
     
     // set up file descriptors to get multiple clients at once
-    printf("Server is running...\n");
     set_up_fd(server_socket);
 }
 

@@ -121,17 +121,22 @@ void handle_connection(int sock, user *users, chat_room *rooms, user *usr,
         } else {
             // this code will need to be debugged.
             for (int i = 0; i < MAX_ROOMS; i++) {
-                if (strcmp(usr->curr_room, rooms[i].name) == 0) {
+                
+                if (rooms[i].in_use && 
+                        strcmp(usr->curr_room, rooms[i].name) == 0) {
                     for (int j = 0; j < MAX_USERS; j++) {
                         if (rooms[i].users[j]->sock != 0) {
                             strcat(peopleList, rooms[i].users[j]->name);
                             strcat(peopleList, "\n");
+                            printf("People list: %s\n", peopleList);
+                            break;
                         }
                     }
                 }
             }
         }
         send_confirmation(sock, command, peopleList);
+        memset(peopleList, 0, sizeof(peopleList));
     } else if (command == CMD_LIST_CHATS) {
         char chatList[MAX_INPUT];
         for (int i = 0; i < MAX_ROOMS; i++) {
@@ -141,38 +146,49 @@ void handle_connection(int sock, user *users, chat_room *rooms, user *usr,
             }
         }
         send_confirmation(sock, command, chatList);
+        memset(chatList, 0, sizeof(chatList));
     } else if (command == CMD_JOIN) {
         // join chat process is easy, check if chat exists, if it doesnt
         // create it, else join it
         // first, if the user is in a room, we need to purge that.
-        for (int i = 0; i < MAX_ROOMS; i++) {
-            if (strcmp(usr->curr_room, rooms[i].name) == 0) {
-                // remove the user from the room
-                for (int j = 0; j < MAX_USERS; j++) {
-                    if (rooms[i].users[j]->sock == usr->sock) {
-                        free(rooms[i].users[j]);
-                        rooms[i].users[j] = calloc(1, sizeof(user));
-                        rooms[i].population--;
-                        //check if the room is empty, if it is delete
-                        if (rooms[i].population == 0) {
-                            rooms[i].in_use = 0;
-                            memset(rooms[i].name, 0, sizeof(rooms[i].name));
-                            memset(rooms[i].password, 0, 
-                                sizeof(rooms[i].password));
+        printf("Ruinning join\n");
+        if (usr->in_room == 1) {
+            for (int i = 0; i < MAX_ROOMS; i++) {
+                if (rooms[i].in_use && strcmp(usr->curr_room, rooms[i].name) == 0) {
+                    // remove the user from the room
+                    for (int j = 0; j < MAX_USERS; j++) {
+                        if (rooms[i].users[j]->sock == usr->sock) {
+                            // remove the user from the room
+                            rooms[i].users[j]->sock = 0;
+                            memset(rooms[i].users[j]->name, 0, 
+                                sizeof(rooms[i].users[j]->name));
+                            memset(rooms[i].users[j]->curr_room, 0,
+                                sizeof(rooms[i].users[j]->curr_room));
+                            usr->in_room = 0;
+                            strcpy(usr->curr_room, "");
+                            // remove the user from the room
+                            rooms[i].population--;
+                            //check if the room is empty, if it is delete
+                            if (rooms[i].population == 0) {
+                                rooms[i].in_use = 0;
+                                memset(rooms[i].name, 0, sizeof(rooms[i].name));
+                                memset(rooms[i].password, 0, 
+                                    sizeof(rooms[i].password));
+                            }
+                            break;
                         }
-                        break;
                     }
-                }
+                } 
             }
         }
-        usr->in_room = 0;
+        printf("Ruinning join2\n");
         for (int i = 0; i < MAX_ROOMS; i++) {
-            if (strcmp(rooms[i].name, newMsg.arg1) == 0) {
+            if (rooms[i].in_use && strcmp(rooms[i].name, newMsg.arg1) == 0) {
                 // add the user to the room
                 if (strcmp(rooms[i].password, newMsg.arg2) == 0) {
                     for (int j = 0; j < MAX_USERS; j++) {
-                        if (rooms[i].users[j].sock == 0) {
-                            rooms[i].users[j] = *usr;
+                        if (rooms[i].users[j]->sock == 0) {
+                            rooms[i].users[j] = usr;
                             usr->in_room = 1;
                             strcpy(usr->curr_room, rooms[i].name);
                             rooms[i].population++;
@@ -188,6 +204,7 @@ void handle_connection(int sock, user *users, chat_room *rooms, user *usr,
                 }
             }
         }
+        printf("Ruinning join4\n");
         if (usr->in_room == 0) {
             // create the room
             for (int i = 0; i < MAX_ROOMS; i++) {
@@ -195,15 +212,16 @@ void handle_connection(int sock, user *users, chat_room *rooms, user *usr,
                     rooms[i].in_use = 1;
                     strcpy(rooms[i].name, newMsg.arg1);
                     strcpy(rooms[i].password, newMsg.arg2);
-                    rooms[i].users[0] = *usr;
+                    rooms[i].users[0] = usr;
                     usr->in_room = 1;
                     strcpy(usr->curr_room, rooms[i].name);
+                    strcpy(rooms[i].users[0]->name, usr->name);
                     rooms[i].population++;
                     break;
                 }
             }
         }
-        send_confirmation(sock, command, "Joined Chat!");
+        send_confirmation(sock, command, newMsg.arg1);
     } else if (command == CMD_LEAVE) {
         send_confirmation(sock, command, "Left chat!");
     } else if (command == CMD_MSG) {
